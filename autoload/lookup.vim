@@ -2,6 +2,7 @@ let s:defaults = {
           \'javascript': {
           \  'substitute': ['\(\<\u\l\+\|\l\+\)\(\u\)' ,'\l\1-\l\2'],
           \  'extension' : '.js',
+          \  'spec_extension' : '.spec.coffee',
           \  'callsign'  : '.',
           \  'func_def'  : [
           \     { 'lhs': 'function ', 'rhs': '\(\s\|(\)' },
@@ -11,14 +12,16 @@ let s:defaults = {
           \'coffee': {
           \  'substitute': ['\(\<\u\l\+\|\l\+\)\(\u\)' ,'\l\1-\l\2'],
           \  'extension' : '.js',
+          \  'spec_extension' : '.spec.coffee',
           \  'callsign'  : '.',
           \  'func_def'  : [
-          \     { 'lhs': 'describe ', 'rhs': '' },
+          \     { 'lhs': 'describe .', 'rhs': '' },
           \  ]
           \},
           \'html' : {
           \  'substitute': ['\v(.*)', '\1-directive'],
           \  'extension' : '.js',
+          \  'spec_extension' : '.spec.coffee',
           \  'callsign'  : '.',
           \  'func_def'  : []
           \}
@@ -27,7 +30,7 @@ let s:defaults = {
 let s:silent = 0
 
 function! lookup#setup()
-  let vars = [ 'substitute', 'extension', 'callsign', 'func_def' ]
+  let vars = [ 'substitute', 'extension', 'spec_extension', 'callsign', 'func_def' ]
   for var in vars
     call s:setVar(var)
   endfor
@@ -63,12 +66,32 @@ function! lookup#goToFile()
   endif
   let keyword_settings = &iskeyword
   let &iskeyword = keyword_settings . ',-'
-  let jumped = s:goToFile(expand('<cword>'))
+  let jumped = s:goToFile(expand('<cword>'), b:lookup_extension);
+  let &iskeyword = keyword_settings
+  return jumped
+endfunction
+
+function! lookup#goToSpecFile()
+  if !s:hasConfigurationDefined()
+    return
+  endif
+
+  let keyword_settings = &iskeyword
+  let &iskeyword = keyword_settings . ',-'
+  let jumped = s:goToFile(expand('<cword>'), b:lookup_spec_extension)
   let &iskeyword = keyword_settings
   return jumped
 endfunction
 
 function! lookup#goToFunc()
+  return s:goToFunc(b:lookup_extension)
+endfunction
+
+function! lookup#goToSpecFunc()
+  return s:goToFunc(b:lookup_spec_extension)
+endfunction
+
+function! s:goToFunc(extension)
   if !s:hasConfigurationDefined()
     return
   endif
@@ -90,21 +113,21 @@ function! lookup#goToFunc()
       let file_name = expand('<cword>')
       call setpos('.', pos)
       try
-        call s:goToFile(file_name)
-        return s:goToFunc(word)
+        call s:goToFile(file_name, a:extension)
+        return s:goToFuncInFile(word)
       endtry
     endif
   endif
   call setpos('.', pos)
-  return  s:goToFunc(word)
+  return  s:goToFuncInFile(word)
 endfunction
 
-function! s:goToFile(word)
+function! s:goToFile(word, extension)
   let lhs = b:lookup_substitute[0]
   let rhs = b:lookup_substitute[1]
   let file_name = substitute(a:word, lhs ,rhs, 'g')
   if a:word != file_name
-    let full_name = file_name . b:lookup_extension
+    let full_name = file_name . a:extension
     try
       exec "find **/" . full_name
       return 1
@@ -112,9 +135,10 @@ function! s:goToFile(word)
       call s:log("Lookup could not find a file named " . full_name)
     endtry
   endif
+  return 0
 endfunction
 
-function! s:goToFunc(word)
+function! s:goToFuncInFile(word)
   let pos = getpos('.')
   let jumped = 0
   for def in b:lookup_func_def
