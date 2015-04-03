@@ -92,7 +92,35 @@ function! lookup#goToFunc()
 endfunction
 
 function! lookup#goToSpecFunc()
-  return s:goToFunc(b:lookup_spec_extension)
+  " Some extra work needs to be done when we are already in the file,
+  " which holds the function definition to which spec we want to jump.
+  let word = s:getCurrentWord()
+  let pos = getpos('')
+  let file_name = expand('%:p')
+  let jumped = s:goToFunc(b:lookup_spec_extension)
+  if jumped && file_name == expand('%:p')
+    let jumped = 0
+    try
+      let short_file_name = expand('%')
+      let spec_name = substitute(short_file_name, b:lookup_extension . '$', b:lookup_spec_extension, '')
+      if spec_name != short_file_name
+        try
+          exec "find **/" . spec_name
+          let jumped = s:goToFuncInFile(word)
+        endtry
+      else
+        let jumped = s:goToFuncInFile(word)
+      endif
+    endtry
+  endif
+
+  if !jumped
+    call s:log('Could not find spec function')
+    " And jump back
+    call setpos(file_name, pos)
+  endif
+
+  return jumped
 endfunction
 
 function! s:goToFunc(extension)
