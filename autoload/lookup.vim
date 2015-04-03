@@ -23,7 +23,31 @@ function! lookup#goToFile()
 endfunction
 
 function! lookup#goToFunc()
-
+  let word = expand('<cword>')
+  let pos = getpos('.')
+  normal! b
+  " When we were at the start of the word already, we moved to far
+  if expand('<cword>') != word
+    normal! w
+  endif
+  " Check if we are at the beginning of the line
+  if getpos('.')[2] != 1
+    normal! h
+    " Check if we are calling a function from another file
+    if getline('.')[getpos('.')[2] - 1] == b:lookup_callsign
+      normal! b
+      " Restore the position so we can come back after we left this file
+      let file_name = expand('<cword>')
+      call setpos('.', pos)
+      try
+        call s:goToFile(file_name)
+        call s:goToFunc(word)
+        return
+      endtry
+    endif
+  endif
+  call setpos('.', pos)
+  call s:goToFunc(word)
 endfunction
 
 function! s:goToFile(word)
