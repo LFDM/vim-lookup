@@ -7,6 +7,10 @@ let s:defaults = {
           \     { 'lhs': 'function ', 'rhs': '' },
           \     { 'lhs': 'this\.', 'rhs': ' = function' }
           \  ]
+          \},
+          \'html' : {
+          \  'substitute': ['(.*)', '\1-directive'],
+          \  'extension' : '.js'
           \}
       \}
 
@@ -17,18 +21,35 @@ function! lookup#setup()
   endfor
 endfunction
 
+function! lookup#goToFuncOrFile()
+  if !s:hasConfigurationDefined()
+    return
+  endif
+
+  let jumped = lookup#goToFunc()
+  if jumped
+    return 1
+  else
+    return lookup#goToFile()
+  endif
+endfunction
+
 function! lookup#goToFile()
   if !s:hasConfigurationDefined()
     return
   endif
-  call s:goToFile(expand('<cword>'))
+  return s:goToFile(expand('<cword>'))
 endfunction
 
 function! lookup#goToFunc()
+  if !s:hasConfigurationDefined()
+    return
+  endif
+
   let word = expand('<cword>')
   let pos = getpos('.')
   normal! b
-  " When we were at the start of the word already, we moved to far
+  " If we were already at the start of the word, we've moved too far
   if expand('<cword>') != word
     normal! w
   endif
@@ -38,18 +59,17 @@ function! lookup#goToFunc()
     " Check if we are calling a function from another file
     if getline('.')[getpos('.')[2] - 1] == b:lookup_callsign
       normal! b
-      " Restore the position so we can come back after we left this file
+      " Restore the position so we can come back after we've left this file
       let file_name = expand('<cword>')
       call setpos('.', pos)
       try
         call s:goToFile(file_name)
-        call s:goToFunc(word)
-        return
+        return s:goToFunc(word)
       endtry
     endif
   endif
   call setpos('.', pos)
-  call s:goToFunc(word)
+  return  s:goToFunc(word)
 endfunction
 
 function! s:goToFile(word)
@@ -60,6 +80,7 @@ function! s:goToFile(word)
     let full_name = file_name . b:lookup_extension
     try
       exec "find **/" . full_name
+      return 1
     catch
       echo "Lookup could not find a file named " . full_name
     endtry
@@ -68,21 +89,22 @@ endfunction
 
 function! s:goToFunc(word)
   let pos = getpos('.')
-  let def_found = 0
+  let jumped = 0
   for def in b:lookup_func_def
-    if !def_found
+    if !jumped
       call search(def.lhs . a:word . def.rhs, 'w')
       " If cursor has not moved we are done
       if !(pos == getpos('.'))
-        let def_found = 1
+        let jumped = 1
       endif
     endif
   endfor
-  if def_found
+  if jumped
     normal! zt
   else
     echo "Could not find a function named " . a:word
   endif
+  return jumped
 endfunction
 
 function! s:getValue(key)
