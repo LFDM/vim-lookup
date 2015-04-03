@@ -4,8 +4,16 @@ let s:defaults = {
           \  'extension' : '.js',
           \  'callsign'  : '.',
           \  'func_def'  : [
-          \     { 'lhs': 'function ', 'rhs': '' },
+          \     { 'lhs': 'function ', 'rhs': '\(\s\|(\)' },
           \     { 'lhs': 'this\.', 'rhs': ' = function' }
+          \  ]
+          \},
+          \'coffee': {
+          \  'substitute': ['\(\<\u\l\+\|\l\+\)\(\u\)' ,'\l\1-\l\2'],
+          \  'extension' : '.js',
+          \  'callsign'  : '.',
+          \  'func_def'  : [
+          \     { 'lhs': 'describe ', 'rhs': '' },
           \  ]
           \},
           \'html' : {
@@ -23,6 +31,10 @@ function! lookup#setup()
   for var in vars
     call s:setVar(var)
   endfor
+
+  if !(exists('g:lookup_no_default_mappings') && g:lookup_no_default_mappings)
+    call s:setDefaultMappings()
+  endif
 endfunction
 
 function! lookup#goToFuncOrFile()
@@ -156,4 +168,8 @@ function! s:log(msg)
   if !s:silent
     echo "lookup: " . a:msg
   endif
+endfunction
+
+function! s:setDefaultMappings()
+  
 endfunction
