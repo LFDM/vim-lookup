@@ -143,9 +143,12 @@ function! s:goToFuncInFile(word)
   let jumped = 0
   for def in b:lookup_func_def
     if !jumped
-      call search(def.lhs . a:word . def.rhs, 'w')
-      " If cursor has not moved we are done
-      if !(pos == getpos('.'))
+      let pattern = def.lhs . a:word . def.rhs
+      call search(pattern, 'w')
+      " If cursor has not moved we are done, but check if we were already
+      " there in the first place, which would also mean that we have a valid
+      " match.
+      if !(pos == getpos('.')) || getline('.') =~ pattern
         let jumped = 1
       endif
     endif
