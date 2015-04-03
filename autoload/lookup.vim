@@ -9,8 +9,10 @@ let s:defaults = {
           \  ]
           \},
           \'html' : {
-          \  'substitute': ['(.*)', '\1-directive'],
-          \  'extension' : '.js'
+          \  'substitute': ['\v(.*)', '\1-directive'],
+          \  'extension' : '.js',
+          \  'callsign'  : '.',
+          \  'func_def'  : []
           \}
       \}
 
@@ -38,7 +40,11 @@ function! lookup#goToFile()
   if !s:hasConfigurationDefined()
     return
   endif
-  return s:goToFile(expand('<cword>'))
+  let keyword_settings = &iskeyword
+  let &iskeyword = keyword_settings . ',-'
+  let jumped = s:goToFile(expand('<cword>'))
+  let &iskeyword = keyword_settings
+  return jumped
 endfunction
 
 function! lookup#goToFunc()
