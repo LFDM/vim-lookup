@@ -41,9 +41,7 @@ function! lookup#setup()
 endfunction
 
 function! lookup#goToFuncOrFile()
-  if !s:hasConfigurationDefined()
-    return
-  endif
+  if !s:hasConfigurationDefined() | return | endif
 
   let s:silent = 1
   let jumped = lookup#goToFunc()
@@ -61,26 +59,13 @@ function! lookup#goToFuncOrFile()
 endfunction
 
 function! lookup#goToFile()
-  if !s:hasConfigurationDefined()
-    return
-  endif
-  let keyword_settings = &iskeyword
-  let &iskeyword = keyword_settings . ',-'
-  let jumped = s:goToFile(expand('<cword>'), b:lookup_extension);
-  let &iskeyword = keyword_settings
-  return jumped
+  if !s:hasConfigurationDefined() | return | endif
+  return s:goToFile(s:getCurrentWord(), b:lookup_extension)
 endfunction
 
 function! lookup#goToSpecFile()
-  if !s:hasConfigurationDefined()
-    return
-  endif
-
-  let keyword_settings = &iskeyword
-  let &iskeyword = keyword_settings . ',-'
-  let jumped = s:goToFile(expand('<cword>'), b:lookup_spec_extension)
-  let &iskeyword = keyword_settings
-  return jumped
+  if !s:hasConfigurationDefined() | return | endif
+  return s:goToFile(s:getCurrentWord(), b:lookup_spec_extension)
 endfunction
 
 function! lookup#goToFunc()
@@ -92,15 +77,13 @@ function! lookup#goToSpecFunc()
 endfunction
 
 function! s:goToFunc(extension)
-  if !s:hasConfigurationDefined()
-    return
-  endif
+  if !s:hasConfigurationDefined() | return | endif
 
-  let word = expand('<cword>')
+  let word = s:getCurrentWord()
   let pos = getpos('.')
   normal! b
   " If we were already at the start of the word, we've moved too far
-  if expand('<cword>') != word
+  if s:getCurrentWord() != word
     normal! w
   endif
   " Check if we are at the beginning of the line
@@ -110,7 +93,7 @@ function! s:goToFunc(extension)
     if getline('.')[getpos('.')[2] - 1] == b:lookup_callsign
       normal! b
       " Restore the position so we can come back after we've left this file
-      let file_name = expand('<cword>')
+      let file_name = s:getCurrentWord()
       call setpos('.', pos)
       try
         call s:goToFile(file_name, a:extension)
@@ -135,7 +118,6 @@ function! s:goToFile(word, extension)
       call s:log("Lookup could not find a file named " . full_name)
     endtry
   endif
-  return 0
 endfunction
 
 function! s:goToFuncInFile(word)
@@ -195,6 +177,14 @@ function! s:log(msg)
   if !s:silent
     echo "lookup: " . a:msg
   endif
+endfunction
+
+function! s:getCurrentWord()
+  let keyword_settings = &iskeyword
+  let &iskeyword = keyword_settings . ',-'
+  let word = expand('<cword>')
+  let &iskeyword = keyword_settings
+  return word
 endfunction
 
 function! s:setDefaultMappings()
