@@ -30,13 +30,17 @@ function! lookup#goToFuncOrFile()
     return
   endif
 
+  let s:silent = 1
   let jumped = lookup#goToFunc()
+  let s:silent = 0
   if jumped
     return 1
   else
+    let s:silent = 1
     let jumped = lookup#goToFile()
+    let s:silent = 0
     if !jumped
-      s:log('Could neither find file nor function')
+      call s:log('Could neither find file nor function')
     endif
   endif
 endfunction
@@ -150,6 +154,6 @@ endfunction
 
 function! s:log(msg)
   if !s:silent
-    echo "lookup: " a:msg
+    echo "lookup: " . a:msg
   endif
 endfunction
