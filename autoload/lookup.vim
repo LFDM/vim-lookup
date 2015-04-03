@@ -16,6 +16,8 @@ let s:defaults = {
           \}
       \}
 
+let s:silent = 0
+
 function! lookup#setup()
   let vars = [ 'substitute', 'extension', 'callsign', 'func_def' ]
   for var in vars
@@ -32,7 +34,10 @@ function! lookup#goToFuncOrFile()
   if jumped
     return 1
   else
-    return lookup#goToFile()
+    let jumped = lookup#goToFile()
+    if !jumped
+      s:log('Could neither find file nor function')
+    endif
   endif
 endfunction
 
@@ -88,7 +93,7 @@ function! s:goToFile(word)
       exec "find **/" . full_name
       return 1
     catch
-      echo "Lookup could not find a file named " . full_name
+      call s:log("Lookup could not find a file named " . full_name)
     endtry
   endif
 endfunction
@@ -108,7 +113,7 @@ function! s:goToFunc(word)
   if jumped
     normal! zt
   else
-    echo "Could not find a function named " . a:word
+    call s:log("Could not find a function named " . a:word)
   endif
   return jumped
 endfunction
@@ -140,5 +145,11 @@ endfunction
 function! s:hasConfigurationDefined()
   if (exists('g:lookup_customizations') && has_key(g:lookup_customizations, &ft)) || has_key(s:defaults, &ft)
     return 1
+  endif
+endfunction
+
+function! s:log(msg)
+  if !s:silent
+    echo "lookup: " a:msg
   endif
 endfunction
