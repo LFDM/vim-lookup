@@ -4,6 +4,8 @@ let s:defaults = {
           \  'extension' : '.js',
           \  'callsign'  : '.',
           \  'func_def'  : [
+          \     { 'lhs': 'function ', 'rhs': '' },
+          \     { 'lhs': 'this\.', 'rhs': ' = function' }
           \  ]
           \}
       \}
@@ -65,9 +67,22 @@ function! s:goToFile(word)
 endfunction
 
 function! s:goToFunc(word)
-  call search('function ' . a:word, 'w')
-  " If cursor has not moved inform user
-  normal! zt
+  let pos = getpos('.')
+  let def_found = 0
+  for def in b:lookup_func_def
+    if !def_found
+      call search(def.lhs . a:word . def.rhs, 'w')
+      " If cursor has not moved we are done
+      if !(pos == getpos('.'))
+        let def_found = 1
+      endif
+    endif
+  endfor
+  if def_found
+    normal! zt
+  else
+    echo "Could not find a function named " . a:word
+  endif
 endfunction
 
 function! s:getValue(key)
