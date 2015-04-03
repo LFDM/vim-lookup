@@ -40,15 +40,16 @@ function! lookup#setup()
   endif
 endfunction
 
+" Duplicated code - not good. But how to pass functions in vim?
+" Exec is not helping, because we cannot save the return value of it
+" then. Redir is also not helping in this case.
 function! lookup#goToFuncOrFile()
   if !s:hasConfigurationDefined() | return | endif
 
   let s:silent = 1
   let jumped = lookup#goToFunc()
   let s:silent = 0
-  if jumped
-    return 1
-  else
+  if !jumped
     let s:silent = 1
     let jumped = lookup#goToFile()
     let s:silent = 0
@@ -56,6 +57,24 @@ function! lookup#goToFuncOrFile()
       call s:log('Could neither find file nor function')
     endif
   endif
+  return jumped
+endfunction
+
+function! lookup#goToSpecFuncOrFile()
+  if !s:hasConfigurationDefined() | return | endif
+
+  let s:silent = 1
+  let jumped = lookup#goToSpecFunc()
+  let s:silent = 0
+  if !jumped
+    let s:silent = 1
+    let jumped = lookup#goToSpecFile()
+    let s:silent = 0
+    if !jumped
+      call s:log('Could neither find file nor function')
+    endif
+  endif
+  return jumped
 endfunction
 
 function! lookup#goToFile()
