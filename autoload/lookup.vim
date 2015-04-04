@@ -54,12 +54,34 @@ let s:silent = 0
 function! lookup#setup()
   let vars = [ 'substitute', 'extension', 'spec_extension', 'callsign', 'func_def' ]
   for var in vars
-    call s:setVar(var)
+    call s:set_var(var)
   endfor
 
   "if !(exists('g:lookup_no_default_mappings') && g:lookup_no_default_mappings)
     "call s:set_default_mappings()
   "endif
+endfunction
+
+function! lookup#goToAndOpen(key)
+  let jumped = lookup#goToFile()
+  if jumped
+    call lookup#open(a:key)
+  endif
+endfunction
+
+function! lookup#open(key)
+  if !has_key(g:lookup_window_opener, a:key)
+    return
+  endif
+
+  let openers = get(g:lookup_window_opener, a:key)
+  let file = expand('%:p')
+  for opener in openers
+    if file =~ opener.pattern
+      call s:open_files(opener.windows, file)
+      return
+    endif
+  endfor
 endfunction
 
 " Duplicated code - not good. But how to pass functions in vim?
@@ -212,7 +234,7 @@ function! s:goToFuncInFile(word)
   return jumped
 endfunction
 
-function! s:getValue(key)
+function! s:get_value(key)
   if exists('g:lookup_customizations')
     let custom = s:lookup_key(g:lookup_customizations, a:key)
     if custom
@@ -232,8 +254,8 @@ function! s:lookup_key(dict, key)
   endif
 endfunction
 
-function! s:setVar(key)
-  call setbufvar(bufname('%'), 'lookup_' . a:key, s:getValue(a:key))
+function! s:set_var(key)
+  call setbufvar(bufname('%'), 'lookup_' . a:key, s:get_value(a:key))
 endfunction
 
 function! s:hasConfigurationDefined()
@@ -254,29 +276,6 @@ function! s:getCurrentWord()
   let word = expand('<cword>')
   let &iskeyword = keyword_settings
   return word
-endfunction
-
-function! lookup#goToAndOpen(key)
-  let jumped = lookup#goToFile()
-  if jumped
-    call lookup#open(a:key)
-  endif
-endfunction
-
-
-function! lookup#open(key)
-  if !has_key(g:lookup_window_opener, a:key)
-    return
-  endif
-
-  let openers = get(g:lookup_window_opener, a:key)
-  let file = expand('%:p')
-  for opener in openers
-    if file =~ opener.pattern
-      call s:open_files(opener.windows, file)
-      return
-    endif
-  endfor
 endfunction
 
 function! s:open_files(windows, source)
