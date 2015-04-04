@@ -60,6 +60,20 @@ function! lookup#open_layout(key)
   endfor
 endfunction
 
+function! lookup#open_file(key)
+  if !has_key(g:lookup_file_mappings, a:key) | return | endif
+
+  let mappings = get(g:lookup_file_mappings, a:key)
+  let file = expand('%:p')
+  for mapping in mappings
+    if file =~ mapping.pattern
+      call s:open_file(file, mapping.substitute)
+      return
+    endif
+  endfor
+  call s:log('No matching pattern found for ' . a:key ' mappings')
+endfunction
+
 function! lookup#go_to_func_or_file()
   return s:go_to_func_or_file('lookup#go_to_func', 'lookup#go_to_file')
 endfunction
@@ -241,6 +255,20 @@ function! s:open_files(windows, source)
     endfor
 
     call s:move_top_left()
+endfunction
+
+function! s:open_file(source, opts)
+  let file_name = substitute(a:source, a:opts[0], a:opts[1], '')
+  if file_name != a:source
+    if filereadable(file_name)
+      exec "e " . file_name
+      return 1
+    else
+      call s:log(file_name . " does not exist")
+    endif
+  else
+    call s:log("Substitution failed: You're most likely already where you want to go")
+  endif
 endfunction
 
 function! s:setup_windows(windows, source)
