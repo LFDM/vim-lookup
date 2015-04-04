@@ -27,28 +27,6 @@ let s:defaults = {
           \}
       \}
 
-let angular_file = '\v\.(js|less|spec.coffee|tpl.html)$'
-let angular_service   = '\v(service|factory)\.js$'
-let angular_directive = 'directive\.js$'
-
-let g:lookup_file_opener = [
-      \[
-        \[
-          \angular_service,
-          \[
-            \ [['source'], [angular_file, '.spec.coffee']]
-          \]
-        \],
-        \[
-          \angular_directive,
-          \[
-            \ [[angular_file, '.js'], [angular_file, '-tpl.html']],
-            \ [[angular_file, '.spec.coffee', 18], [angular_file, '.less', 18]]
-          \]
-        \]
-      \]
-\]
-
 let s:silent = 0
 
 function! lookup#setup()
@@ -70,9 +48,7 @@ function! lookup#goToAndOpen(key)
 endfunction
 
 function! lookup#open(key)
-  if !has_key(g:lookup_window_opener, a:key)
-    return
-  endif
+  if !has_key(g:lookup_window_opener, a:key) | return | endif
 
   let openers = get(g:lookup_window_opener, a:key)
   let file = expand('%:p')
@@ -136,6 +112,10 @@ function! lookup#goToFunc()
 endfunction
 
 function! lookup#goToSpecFunc()
+  return s:goToSpecFunc()
+endfunction
+
+function! s:goToSpecFunc()
   " Some extra work needs to be done when we are already in the file,
   " which holds the function definition to which spec we want to jump.
   let word = s:getCurrentWord()
@@ -234,50 +214,6 @@ function! s:goToFuncInFile(word)
   return jumped
 endfunction
 
-function! s:get_value(key)
-  if exists('g:lookup_customizations')
-    let custom = s:lookup_key(g:lookup_customizations, a:key)
-    if custom
-      return custom
-    endif
-  endif
-
-  return s:lookup_key(s:defaults, a:key)
-endfunction
-
-function! s:lookup_key(dict, key)
-  if has_key(a:dict, &ft)
-    let container = get(a:dict, &ft)
-    if has_key(container, a:key)
-      return get(container, a:key)
-    endif
-  endif
-endfunction
-
-function! s:set_var(key)
-  call setbufvar(bufname('%'), 'lookup_' . a:key, s:get_value(a:key))
-endfunction
-
-function! s:hasConfigurationDefined()
-  if (exists('g:lookup_customizations') && has_key(g:lookup_customizations, &ft)) || has_key(s:defaults, &ft)
-    return 1
-  endif
-endfunction
-
-function! s:log(msg)
-  if !s:silent
-    echo "lookup: " . a:msg
-  endif
-endfunction
-
-function! s:getCurrentWord()
-  let keyword_settings = &iskeyword
-  let &iskeyword = keyword_settings . ',-'
-  let word = expand('<cword>')
-  let &iskeyword = keyword_settings
-  return word
-endfunction
-
 function! s:open_files(windows, source)
     " Calculate files we have access to
     let windows = s:setup_windows(a:windows, a:source)
@@ -341,31 +277,75 @@ function! s:setup_windows(windows, source)
   return result
 endfunction
 
+function! s:getCurrentWord()
+  let keyword_settings = &iskeyword
+  let &iskeyword = keyword_settings . ',-'
+  let word = expand('<cword>')
+  let &iskeyword = keyword_settings
+  return word
+endfunction
+
 function! s:generate_file_name(file, subst)
   return substitute(a:file, a:subst[0], a:subst[1], '')
 endfunction
 
+let s:window_command = "normal! \<C-W>"
+
 function! s:moveLeft(count)
-  exec "normal! \<C-W>" . a:count . "h"
+  exec s:window_command . a:count . "h"
 endfunction
 
 function! s:moveRight(count)
-  exec "normal! \<C-W>" . a:count . "l"
+  exec s:window_command . a:count . "l"
 endfunction
 
 function! s:moveLeft(count)
-  exec "normal! \<C-W>" . a:count . "l"
+  exec s:window_command . a:count . "l"
 endfunction
 
 function! s:moveUp(count)
-  exec "normal! \<C-W>" . a:count . "k"
+  exec s:window_command . a:count . "k"
 endfunction
 
 function! s:moveDown(count)
-  exec "normal! \<C-W>" . a:count . "j"
+  exec s:window_command . a:count . "j"
 endfunction
 
 function! s:moveTopLeft()
-  exec "normal! \<C-W>t"
+  exec s:window_command . "t"
 endfunction
+
+function! s:get_value(key)
+  if exists('g:lookup_customizations')
+    let custom = s:lookup_key(g:lookup_customizations, a:key)
+    if custom | return custom | endif
+  endif
+  return s:lookup_key(s:defaults, a:key)
+endfunction
+
+function! s:lookup_key(dict, key)
+  if has_key(a:dict, &ft)
+    let container = get(a:dict, &ft)
+    if has_key(container, a:key)
+      return get(container, a:key)
+    endif
+  endif
+endfunction
+
+function! s:set_var(key)
+  call setbufvar(bufname('%'), 'lookup_' . a:key, s:get_value(a:key))
+endfunction
+
+function! s:hasConfigurationDefined()
+  if (exists('g:lookup_customizations') && has_key(g:lookup_customizations, &ft)) || has_key(s:defaults, &ft)
+    return 1
+  endif
+endfunction
+
+function! s:log(msg)
+  if !s:silent
+    echo "lookup: " . a:msg
+  endif
+endfunction
+
 
