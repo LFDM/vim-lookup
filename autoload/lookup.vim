@@ -27,6 +27,28 @@ let s:defaults = {
           \}
       \}
 
+let angular_file = '\v\.(js|less|spec.coffee|tpl.html)$'
+let angular_service   = '\v(service|factory)\.js$'
+let angular_directive = 'directive\.js$'
+
+let g:lookup_file_opener = [
+      \[
+        \[
+          \angular_service,
+          \[
+            \ [['source'], [angular_file, '.spec.coffee']]
+          \]
+        \],
+        \[
+          \angular_directive,
+          \[
+            \ [[angular_file, '.js'], [angular_file, '-tpl.html']],
+            \ [[angular_file, '.spec.coffee', 18], [angular_file, '.less', 18]]
+          \]
+        \]
+      \]
+\]
+
 let s:silent = 0
 
 function! lookup#setup()
@@ -35,9 +57,9 @@ function! lookup#setup()
     call s:setVar(var)
   endfor
 
-  if !(exists('g:lookup_no_default_mappings') && g:lookup_no_default_mappings)
-    call s:setDefaultMappings()
-  endif
+  "if !(exists('g:lookup_no_default_mappings') && g:lookup_no_default_mappings)
+    "call s:set_default_mappings()
+  "endif
 endfunction
 
 " Duplicated code - not good. But how to pass functions in vim?
@@ -234,6 +256,110 @@ function! s:getCurrentWord()
   return word
 endfunction
 
-function! s:setDefaultMappings()
-  
+
+function! lookup#open(key)
+  if !has_key(g:lookup_window_opener, a:key)
+    return
+  endif
+
+  let openers = get(g:lookup_window_opener, a:key)
+  let file = expand('%:p')
+  for opener in openers
+    if file =~ opener.pattern
+      call s:open_files(opener.windows, file)
+      return
+    endif
+  endfor
 endfunction
+
+function! s:open_files(windows, source)
+    " Calculate files we have access to
+    let windows = s:setup_windows(a:windows, a:source)
+
+    " Create all splits and open file
+    let hor_i = 0
+    for hor_splits in windows
+      let vert_i = 0
+      call s:moveTopLeft()
+
+      for vert_split in hor_splits
+        " When the window is defined
+        let f = vert_split.file
+        " When we are at the topleft file
+        if f != '---'
+          if hor_i == 0 && vert_i == 0
+            exec "e ". f
+          else
+            call s:moveRight(vert_i)
+            " When no vertical split has yet been done
+            if hor_i == 0
+              exec vert_split.cols . "vsp" . f
+            else
+              call s:moveRight(vert_i)
+              call s:moveDown(hor_i - 1)
+              exec vert_split.rows . "sp" . f
+              call s:moveUp(hor_i - 1)
+            endif
+
+            call s:moveLeft(vert_i)
+          endif
+        endif
+        let vert_i += 1
+      endfor
+
+      let hor_i += 1
+    endfor
+
+    call s:moveTopLeft()
+endfunction
+
+function! s:setup_windows(windows, source)
+  let result = []
+  for hor in a:windows
+    let res = []
+    for vert in hor
+      let r = { 'rows': '', 'cols': '' }
+      if has_key(vert, 'rows') | let r.rows = vert.rows | endif
+      if has_key(vert, 'cols') | let r.cols = vert.cols | endif
+      if has_key(vert, 'empty') && vert.empty
+        let r.file = '---'
+      else
+        let r.file = s:generate_file_name(a:source, vert.substitute)
+      endif
+      call add(res, r)
+    endfor
+    if len(res) > 0
+      call add(result, res)
+    endif
+  endfor
+  return result
+endfunction
+
+function! s:generate_file_name(file, subst)
+  return substitute(a:file, a:subst[0], a:subst[1], '')
+endfunction
+
+function! s:moveLeft(count)
+  exec "normal! \<C-W>" . a:count . "h"
+endfunction
+
+function! s:moveRight(count)
+  exec "normal! \<C-W>" . a:count . "l"
+endfunction
+
+function! s:moveLeft(count)
+  exec "normal! \<C-W>" . a:count . "l"
+endfunction
+
+function! s:moveUp(count)
+  exec "normal! \<C-W>" . a:count . "k"
+endfunction
+
+function! s:moveDown(count)
+  exec "normal! \<C-W>" . a:count . "j"
+endfunction
+
+function! s:moveTopLeft()
+  exec "normal! \<C-W>t"
+endfunction
+
