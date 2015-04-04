@@ -12,5 +12,6 @@ augroup END
 
 command! LookupGoTo call lookup#goToFuncOrFile()
 command! LookupGoToSpec call lookup#goToSpecFuncOrFile()
+command! -nargs=1 LookupOpen call lookup#open(<f-args>)
 
 let g:loaded_lookup = 1
