@@ -60,41 +60,12 @@ function! lookup#open(key)
   endfor
 endfunction
 
-" Duplicated code - not good. But how to pass functions in vim?
-" Exec is not helping, because we cannot save the return value of it
-" then. Redir is also not helping in this case.
 function! lookup#goToFuncOrFile()
-  if !s:hasConfigurationDefined() | return | endif
-
-  let s:silent = 1
-  let jumped = lookup#goToFunc()
-  let s:silent = 0
-  if !jumped
-    let s:silent = 1
-    let jumped = lookup#goToFile()
-    let s:silent = 0
-    if !jumped
-      call s:log('Could neither find file nor function')
-    endif
-  endif
-  return jumped
+  return s:goToFuncOrFile('lookup#goToFunc', 'lookup#goToFile')
 endfunction
 
 function! lookup#goToSpecFuncOrFile()
-  if !s:hasConfigurationDefined() | return | endif
-
-  let s:silent = 1
-  let jumped = lookup#goToSpecFunc()
-  let s:silent = 0
-  if !jumped
-    let s:silent = 1
-    let jumped = lookup#goToSpecFile()
-    let s:silent = 0
-    if !jumped
-      call s:log('Could neither find file nor function')
-    endif
-  endif
-  return jumped
+  return s:goToFuncOrFile('lookup#goToSpecFunc', 'lookup#goToSpecFile')
 endfunction
 
 function! lookup#goToFile()
@@ -113,6 +84,23 @@ endfunction
 
 function! lookup#goToSpecFunc()
   return s:goToSpecFunc()
+endfunction
+
+function! s:goToFuncOrFile(func_fn, file_fn)
+  if !s:hasConfigurationDefined() | return | endif
+
+  let s:silent = 1
+  let jumped = {a:func_fn}()
+  let s:silent = 0
+  if !jumped
+    let s:silent = 1
+    let jumped = {a:file_fn}()
+    let s:silent = 0
+    if !jumped
+      call s:log('Could neither find file nor function')
+    endif
+  endif
+  return jumped
 endfunction
 
 function! s:goToSpecFunc()
