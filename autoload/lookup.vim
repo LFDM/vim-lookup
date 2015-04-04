@@ -34,10 +34,6 @@ function! lookup#setup()
   for var in vars
     call s:set_var(var)
   endfor
-
-  "if !(exists('g:lookup_no_default_mappings') && g:lookup_no_default_mappings)
-    "call s:set_default_mappings()
-  "endif
 endfunction
 
 function! lookup#goToAndOpen(key)
