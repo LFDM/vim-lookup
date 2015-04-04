@@ -218,7 +218,10 @@ function! s:open_files(windows, source)
         " When we are at the topleft file
         if f != '---'
           if hor_i == 0 && vert_i == 0
-            exec "e ". f
+            " Don't open the file in case we're already there
+            if a:source != f
+              exec "e ". f
+            endif
           else
             call s:move_right(vert_i)
             " When no vertical split has yet been done
@@ -228,10 +231,7 @@ function! s:open_files(windows, source)
               call s:move_right(vert_i)
               call s:move_down(hor_i - 1)
               exec vert_split.rows . "sp" . f
-              call s:move_up(hor_i - 1)
             endif
-
-            call s:move_left(vert_i)
           endif
         endif
         let vert_i += 1
