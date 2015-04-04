@@ -34,19 +34,23 @@ function! lookup#setup()
   for var in vars
     call s:set_var(var)
   endfor
+
+  "if !(exists('g:lookup_no_default_mappings') && g:lookup_no_default_mappings)
+    "call s:set_default_mappings()
+  "endif
 endfunction
 
-function! lookup#goToAndOpen(key)
-  let jumped = lookup#goToFile()
+function! lookup#go_to_and_open_layout(key)
+  let jumped = lookup#go_to_file()
   if jumped
-    call lookup#open(a:key)
+    call lookup#open_layout(a:key)
   endif
 endfunction
 
-function! lookup#open(key)
-  if !has_key(g:lookup_window_opener, a:key) | return | endif
+function! lookup#open_layout(key)
+  if !has_key(g:lookup_layouts, a:key) | return | endif
 
-  let openers = get(g:lookup_window_opener, a:key)
+  let openers = get(g:lookup_layouts, a:key)
   let file = expand('%:p')
   for opener in openers
     if file =~ opener.pattern
@@ -56,34 +60,34 @@ function! lookup#open(key)
   endfor
 endfunction
 
-function! lookup#goToFuncOrFile()
-  return s:goToFuncOrFile('lookup#goToFunc', 'lookup#goToFile')
+function! lookup#go_to_func_or_file()
+  return s:go_to_func_or_file('lookup#go_to_func', 'lookup#go_to_file')
 endfunction
 
-function! lookup#goToSpecFuncOrFile()
-  return s:goToFuncOrFile('lookup#goToSpecFunc', 'lookup#goToSpecFile')
+function! lookup#go_to_spec_func_or_file()
+  return s:go_to_func_or_file('lookup#go_to_spec_func', 'lookup#go_to_spec_file')
 endfunction
 
-function! lookup#goToFile()
-  if !s:hasConfigurationDefined() | return | endif
-  return s:goToFile(s:getCurrentWord(), b:lookup_extension)
+function! lookup#go_to_file()
+  if !s:has_configuration_defined() | return | endif
+  return s:go_to_file(s:get_current_word(), b:lookup_extension)
 endfunction
 
-function! lookup#goToSpecFile()
-  if !s:hasConfigurationDefined() | return | endif
-  return s:goToFile(s:getCurrentWord(), b:lookup_spec_extension)
+function! lookup#go_to_spec_file()
+  if !s:has_configuration_defined() | return | endif
+  return s:go_to_file(s:get_current_word(), b:lookup_spec_extension)
 endfunction
 
-function! lookup#goToFunc()
-  return s:goToFunc(b:lookup_extension)
+function! lookup#go_to_func()
+  return s:go_to_func(b:lookup_extension)
 endfunction
 
-function! lookup#goToSpecFunc()
-  return s:goToSpecFunc()
+function! lookup#go_to_spec_func()
+  return s:go_to_spec_func()
 endfunction
 
-function! s:goToFuncOrFile(func_fn, file_fn)
-  if !s:hasConfigurationDefined() | return | endif
+function! s:go_to_func_or_file(func_fn, file_fn)
+  if !s:has_configuration_defined() | return | endif
 
   let s:silent = 1
   let jumped = {a:func_fn}()
@@ -99,13 +103,13 @@ function! s:goToFuncOrFile(func_fn, file_fn)
   return jumped
 endfunction
 
-function! s:goToSpecFunc()
+function! s:go_to_spec_func()
   " Some extra work needs to be done when we are already in the file,
   " which holds the function definition to which spec we want to jump.
-  let word = s:getCurrentWord()
+  let word = s:get_current_word()
   let pos = getpos('')
   let file_name = expand('%:p')
-  let jumped = s:goToFunc(b:lookup_spec_extension)
+  let jumped = s:go_to_func(b:lookup_spec_extension)
   if jumped && file_name == expand('%:p')
     let jumped = 0
     try
@@ -114,10 +118,10 @@ function! s:goToSpecFunc()
       if spec_name != short_file_name
         try
           exec "find **/" . spec_name
-          let jumped = s:goToFuncInFile(word)
+          let jumped = s:go_to_func_in_file(word)
         endtry
       else
-        let jumped = s:goToFuncInFile(word)
+        let jumped = s:go_to_func_in_file(word)
       endif
     endtry
   endif
@@ -131,14 +135,14 @@ function! s:goToSpecFunc()
   return jumped
 endfunction
 
-function! s:goToFunc(extension)
-  if !s:hasConfigurationDefined() | return | endif
+function! s:go_to_func(extension)
+  if !s:has_configuration_defined() | return | endif
 
-  let word = s:getCurrentWord()
+  let word = s:get_current_word()
   let pos = getpos('.')
   normal! b
   " If we were already at the start of the word, we've moved too far
-  if s:getCurrentWord() != word
+  if s:get_current_word() != word
     normal! w
   endif
   " Check if we are at the beginning of the line
@@ -148,19 +152,19 @@ function! s:goToFunc(extension)
     if getline('.')[getpos('.')[2] - 1] == b:lookup_callsign
       normal! b
       " Restore the position so we can come back after we've left this file
-      let file_name = s:getCurrentWord()
+      let file_name = s:get_current_word()
       call setpos('.', pos)
       try
-        call s:goToFile(file_name, a:extension)
-        return s:goToFuncInFile(word)
+        call s:go_to_file(file_name, a:extension)
+        return s:go_to_func_in_file(word)
       endtry
     endif
   endif
   call setpos('.', pos)
-  return  s:goToFuncInFile(word)
+  return  s:go_to_func_in_file(word)
 endfunction
 
-function! s:goToFile(word, extension)
+function! s:go_to_file(word, extension)
   let lhs = b:lookup_substitute[0]
   let rhs = b:lookup_substitute[1]
   let file_name = substitute(a:word, lhs ,rhs, 'g')
@@ -175,7 +179,7 @@ function! s:goToFile(word, extension)
   endif
 endfunction
 
-function! s:goToFuncInFile(word)
+function! s:go_to_func_in_file(word)
   let pos = getpos('.')
   let jumped = 0
   for def in b:lookup_func_def
@@ -206,7 +210,7 @@ function! s:open_files(windows, source)
     let hor_i = 0
     for hor_splits in windows
       let vert_i = 0
-      call s:moveTopLeft()
+      call s:move_top_left()
 
       for vert_split in hor_splits
         " When the window is defined
@@ -216,18 +220,18 @@ function! s:open_files(windows, source)
           if hor_i == 0 && vert_i == 0
             exec "e ". f
           else
-            call s:moveRight(vert_i)
+            call s:move_right(vert_i)
             " When no vertical split has yet been done
             if hor_i == 0
               exec vert_split.cols . "vsp" . f
             else
-              call s:moveRight(vert_i)
-              call s:moveDown(hor_i - 1)
+              call s:move_right(vert_i)
+              call s:move_down(hor_i - 1)
               exec vert_split.rows . "sp" . f
-              call s:moveUp(hor_i - 1)
+              call s:move_up(hor_i - 1)
             endif
 
-            call s:moveLeft(vert_i)
+            call s:move_left(vert_i)
           endif
         endif
         let vert_i += 1
@@ -236,7 +240,7 @@ function! s:open_files(windows, source)
       let hor_i += 1
     endfor
 
-    call s:moveTopLeft()
+    call s:move_top_left()
 endfunction
 
 function! s:setup_windows(windows, source)
@@ -261,7 +265,7 @@ function! s:setup_windows(windows, source)
   return result
 endfunction
 
-function! s:getCurrentWord()
+function! s:get_current_word()
   let keyword_settings = &iskeyword
   let &iskeyword = keyword_settings . ',-'
   let word = expand('<cword>')
@@ -275,27 +279,23 @@ endfunction
 
 let s:window_command = "normal! \<C-W>"
 
-function! s:moveLeft(count)
+function! s:move_left(count)
   exec s:window_command . a:count . "h"
 endfunction
 
-function! s:moveRight(count)
+function! s:move_right(count)
   exec s:window_command . a:count . "l"
 endfunction
 
-function! s:moveLeft(count)
-  exec s:window_command . a:count . "l"
-endfunction
-
-function! s:moveUp(count)
+function! s:move_up(count)
   exec s:window_command . a:count . "k"
 endfunction
 
-function! s:moveDown(count)
+function! s:move_down(count)
   exec s:window_command . a:count . "j"
 endfunction
 
-function! s:moveTopLeft()
+function! s:move_top_left()
   exec s:window_command . "t"
 endfunction
 
@@ -320,7 +320,7 @@ function! s:set_var(key)
   call setbufvar(bufname('%'), 'lookup_' . a:key, s:get_value(a:key))
 endfunction
 
-function! s:hasConfigurationDefined()
+function! s:has_configuration_defined()
   if (exists('g:lookup_customizations') && has_key(g:lookup_customizations, &ft)) || has_key(s:defaults, &ft)
     return 1
   endif
