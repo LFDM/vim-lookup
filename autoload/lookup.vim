@@ -256,6 +256,13 @@ function! s:getCurrentWord()
   return word
 endfunction
 
+function! lookup#goToAndOpen(key)
+  let jumped = lookup#goToFile()
+  if jumped
+    call lookup#open(a:key)
+  endif
+endfunction
+
 
 function! lookup#open(key)
   if !has_key(g:lookup_window_opener, a:key)
