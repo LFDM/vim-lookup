@@ -34,10 +34,6 @@ function! lookup#setup()
   for var in vars
     call s:set_var(var)
   endfor
-
-  "if !(exists('g:lookup_no_default_mappings') && g:lookup_no_default_mappings)
-    "call s:set_default_mappings()
-  "endif
 endfunction
 
 function! lookup#go_to_and_open_layout(key)
@@ -103,6 +99,8 @@ endfunction
 function! s:go_to_func_or_file(func_fn, file_fn)
   if !s:has_configuration_defined() | return | endif
 
+  let current = expand('%:p')
+
   let s:silent = 1
   let jumped = {a:func_fn}()
   let s:silent = 0
@@ -111,7 +109,11 @@ function! s:go_to_func_or_file(func_fn, file_fn)
     let jumped = {a:file_fn}()
     let s:silent = 0
     if !jumped
-      call s:log('Could neither find file nor function')
+      if current == expand('%:p')
+        call s:log('Could neither find file nor function')
+      else
+        call s:log('Cound not find function')
+      endif
     endif
   endif
   return jumped
