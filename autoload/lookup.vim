@@ -152,18 +152,18 @@ function! s:go_to_func(extension)
 endfunction
 
 function! s:go_to_file(word, extension)
-  let lhs = b:lookup_substitute[0]
-  let rhs = b:lookup_substitute[1]
-  let file_name = substitute(a:word, lhs ,rhs, 'g')
-  if a:word != file_name
-    let full_name = file_name . a:extension
-    try
-      exec "find **/" . full_name
-      return 1
-    catch
-      call s:log("Lookup could not find a file named " . full_name)
-    endtry
-  endif
+  for subst in b:lookup_substitute
+    let file_name = substitute(a:word, subst.pattern, subst.replacement, 'g')
+    if a:word != file_name
+      let full_name = file_name . a:extension
+      try
+        exec "find **/" . full_name
+        return 1
+      catch
+        call s:log("Lookup could not find a file named " . full_name)
+        return 0
+      endtry
+  endfor
 endfunction
 
 function! s:go_to_func_in_file(word)
