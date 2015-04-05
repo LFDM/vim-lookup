@@ -163,6 +163,7 @@ function! s:go_to_file(word, extension)
         call s:log("Lookup could not find a file named " . full_name)
         return 0
       endtry
+    endif
   endfor
 endfunction
 
