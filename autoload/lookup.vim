@@ -1,32 +1,3 @@
-let s:defaults = {
-          \'javascript': {
-          \  'substitute': ['\(\<\u\l\+\|\l\+\)\(\u\)' ,'\l\1-\l\2'],
-          \  'extension' : '.js',
-          \  'spec_extension' : '.spec.coffee',
-          \  'callsign'  : '.',
-          \  'func_def'  : [
-          \     { 'lhs': 'function ', 'rhs': '\(\s\|(\)' },
-          \     { 'lhs': 'this\.', 'rhs': ' = function' }
-          \  ]
-          \},
-          \'coffee': {
-          \  'substitute': ['\(\<\u\l\+\|\l\+\)\(\u\)' ,'\l\1-\l\2'],
-          \  'extension' : '.js',
-          \  'spec_extension' : '.spec.coffee',
-          \  'callsign'  : '.',
-          \  'func_def'  : [
-          \     { 'lhs': 'describe .', 'rhs': '' },
-          \  ]
-          \},
-          \'html' : {
-          \  'substitute': ['\v(.*)', '\1-directive'],
-          \  'extension' : '.js',
-          \  'spec_extension' : '.spec.coffee',
-          \  'callsign'  : '.',
-          \  'func_def'  : []
-          \}
-      \}
-
 let s:silent = 0
 
 function! lookup#setup()
@@ -330,11 +301,9 @@ function! s:move_top_left()
 endfunction
 
 function! s:get_value(key)
-  if exists('g:lookup_customizations')
-    let custom = s:lookup_key(g:lookup_customizations, a:key)
-    if custom | return custom | endif
+  if exists('g:lookup_go_to_mappings')
+    return s:lookup_key(g:lookup_go_to_mappings, a:key)
   endif
-  return s:lookup_key(s:defaults, a:key)
 endfunction
 
 function! s:lookup_key(dict, key)
@@ -351,7 +320,7 @@ function! s:set_var(key)
 endfunction
 
 function! s:has_configuration_defined()
-  if (exists('g:lookup_customizations') && has_key(g:lookup_customizations, &ft)) || has_key(s:defaults, &ft)
+  if (exists('g:lookup_go_to_mappings') && has_key(g:lookup_go_to_mappings, &ft))
     return 1
   endif
 endfunction
