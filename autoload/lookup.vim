@@ -408,7 +408,7 @@ endfunction
 function! s:ask_for_file(msg, choices)
     let choice = confirm("lookup: " . a:msg, a:choices)
     if choice == 0
-      msg = "Invalid choice - try again"
+      let msg = "Invalid choice - try again"
       return s:ask_for_file(msg, a:choices)
     else
       return choice
