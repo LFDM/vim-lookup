@@ -16,6 +16,11 @@ let g:lookup_default_func_defs = {
   \  { 'lhs': 'function ', 'rhs': '\s\?(' },
   \  { 'lhs': 'this\.', 'rhs': ' = ' },
   \  { 'lhs': '\.', 'rhs': ' = function' },
+  \  { 'lhs': 'describe .', 'rhs': '' },
+  \],
+  \'coffee': [
+  \  { 'rhs': '= \((.*)\)\? \?[-=]>' },
+  \  { 'lhs': 'describe .', 'rhs': '' },
   \],
   \'ruby': [
   \  { 'lhs': 'describe ..\?' },
@@ -26,6 +31,11 @@ let g:lookup_default_func_defs = {
 
 let g:lookup_default_substitutes = {
   \'javascript': [
+  \  g:lookup_substitutions.camel_case_to_hyphenated,
+  \  g:lookup_substitutions.to_lowercase
+  \],
+  \'coffee': [
+  \  g:lookup_substitutions.camel_case_to_underscored,
   \  g:lookup_substitutions.camel_case_to_hyphenated,
   \  g:lookup_substitutions.to_lowercase
   \],
