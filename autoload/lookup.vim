@@ -153,7 +153,7 @@ endfunction
 
 function! s:go_to_file(word, extension)
   for subst in b:lookup_substitute
-    let file_name = substitute(a:word, subst.pattern, subst.replacement, 'g')
+    let file_name = substitute(a:word, subst[0], subst[1], 'g')
     if a:word !=# file_name
       let full_name = file_name . a:extension
       try
