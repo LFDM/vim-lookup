@@ -376,14 +376,43 @@ function! s:find_file(path)
     let files = glob(a:path, 0, 1)
     let no_of_files = len(files)
     if no_of_files == 0
-        return 0
+      return 0
     endif
     if no_of_files == 1
-        exec "e " . files[0]
+      exec "e " . files[0]
     else
-      "exec "find " . a:path
+      let msg = "Multiple files available to jump to - please choose one"
+      let choices = s:build_choice_string(files)
+      let choice = s:ask_for_file(msg, choices)
+      exec "e " . files[choice - 1]
     endif
     return 1
+endfunction
+
+let s:choices = 'asdfjkl;ghqweruioptyzxcvbnm1234567890'
+
+function! s:build_choice_string(arr)
+  let choices = ''
+  let max = len(a:arr) - 1
+  let i = 0
+  for el in a:arr
+    let choices .= "&" . s:choices[i] . ': ' . el
+    if i != max
+      let choices .= "\n"
+    endif
+    let i += 1
+  endfor
+  return choices
+endfunction
+
+function! s:ask_for_file(msg, choices)
+    let choice = confirm("lookup: " . a:msg, a:choices)
+    if choice == 0
+      msg = "Invalid choice - try again"
+      return s:ask_for_file(msg, a:choices)
+    else
+      return choice
+    endif
 endfunction
 
 
