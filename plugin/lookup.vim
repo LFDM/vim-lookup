@@ -5,6 +5,12 @@ endif
 if !exists("g:lookup_layouts") | let g:lookup_layouts = {} | endif
 if !exists("g:lookup_file_mappings") | let g:lookup_file_mappings = {} | endif
 
+let g:lookup_substitutions = {
+  \ 'camel_case_to_hyphenated': ['\(\<\u\l\+\|\l\+\)\(\u\)', '\l\1-\l\2'],
+  \ 'camel_case_to_underscored': ['\(\<\u\l\+\|\l\+\)\(\u\)', '\l\1_\l\2'],
+  \ 'to_lowercase': ['\(.*\)', '\l\1']
+\}
+
 augroup lookup
   au Filetype * call lookup#setup()
 augroup END
