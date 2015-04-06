@@ -58,12 +58,12 @@ function! lookup#go_to_spec_func_or_file()
 endfunction
 
 function! lookup#go_to_file()
-  if !b:is_setup | return | endif
+  if !b:is_setup | return s:no_conf_present() | endif
   return s:go_to_file(s:get_current_word(), b:lookup_main_file)
 endfunction
 
 function! lookup#go_to_spec_file()
-  if !b:is_setup | return | endif
+  if !b:is_setup | return s:no_conf_present() | endif
   return s:go_to_file(s:get_current_word(), b:lookup_spec_file)
 endfunction
 
@@ -76,7 +76,7 @@ function! lookup#go_to_spec_func()
 endfunction
 
 function! s:go_to_func_or_file(func_fn, file_fn)
-  if !b:is_setup | return | endif
+  if !b:is_setup | return s:no_conf_present() | endif
 
   let current = expand('%:p')
 
@@ -135,7 +135,7 @@ function! s:go_to_spec_func()
 endfunction
 
 function! s:go_to_func(file_def)
-  if !b:is_setup | return | endif
+  if !b:is_setup | return s:no_conf_present() | endif
 
   let word = s:get_current_word()
   let pos = getpos('.')
@@ -380,6 +380,10 @@ function! s:log(msg)
   if !s:silent
     echo "lookup: " . a:msg
   endif
+endfunction
+
+function! s:no_conf_present()
+  call s:log("No configuration for " . &ft . " present")
 endfunction
 
 
