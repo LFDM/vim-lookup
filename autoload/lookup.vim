@@ -1,7 +1,9 @@
 let s:silent = 0
+let b:is_setup = 0
 
 function! lookup#setup()
-  if !s:has_configuration_defined() | return | endif
+  let b:is_setup = s:has_configuration_defined()
+  if !b:is_setup | return | endif
 
   let vars = { 'substitute': [], 'callsign': '.', 'func_def': [] }
   for var in items(vars) | call s:set_var(var[0], var[1]) | endfor
@@ -56,12 +58,12 @@ function! lookup#go_to_spec_func_or_file()
 endfunction
 
 function! lookup#go_to_file()
-  if !s:has_configuration_defined() | return | endif
+  if !b:is_setup | return | endif
   return s:go_to_file(s:get_current_word(), b:lookup_main_file)
 endfunction
 
 function! lookup#go_to_spec_file()
-  if !s:has_configuration_defined() | return | endif
+  if !b:is_setup | return | endif
   return s:go_to_file(s:get_current_word(), b:lookup_spec_file)
 endfunction
 
@@ -74,7 +76,7 @@ function! lookup#go_to_spec_func()
 endfunction
 
 function! s:go_to_func_or_file(func_fn, file_fn)
-  if !s:has_configuration_defined() | return | endif
+  if !b:is_setup | return | endif
 
   let current = expand('%:p')
 
@@ -133,7 +135,7 @@ function! s:go_to_spec_func()
 endfunction
 
 function! s:go_to_func(file_def)
-  if !s:has_configuration_defined() | return | endif
+  if !b:is_setup | return | endif
 
   let word = s:get_current_word()
   let pos = getpos('.')
