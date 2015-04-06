@@ -186,7 +186,7 @@ function! s:go_to_func_in_file(word)
   let jumped = 0
   for def in b:lookup_func_def
     if !jumped
-      let pattern = def.lhs . a:word . def.rhs
+      let pattern = get(def, 'lhs', '') . a:word . get(def, 'rhs', '')
       call search(pattern, 'w')
       " If cursor has not moved we are done, but check if we were already
       " there in the first place, which would also mean that we have a valid
