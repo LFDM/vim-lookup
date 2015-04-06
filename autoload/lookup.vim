@@ -107,29 +107,29 @@ function! s:go_to_spec_func()
   let jumped = s:go_to_func(b:lookup_spec_file)
   if jumped && file_name == expand('%:p')
     let jumped = 0
-    try
-      let short_file_name = expand('%')
-      let main = b:lookup_main_file
-      let spec = b:lookup_spec_file
-      let pattern = '^' . main.prefix . '\(.*\)' . main.suffix . '$'
-      let replacement = spec.prefix . '\1' . spec.suffix
-      let spec_name = substitute(short_file_name, pattern, replacement, '')
-      let path = "**/" . spec.dir . fnamemodify(spec_name, ':t:')
-      let spec_file = glob(path, 0, 1)
-      if index(spec_file, file_name) == -1
-        if s:find_file(path)
-          let jumped = s:go_to_func_in_file(word)
-        endif
-      else
+    let short_file_name = expand('%')
+    let main = b:lookup_main_file
+    let spec = b:lookup_spec_file
+    let pattern = '^' . main.prefix . '\(.*\)' . main.suffix . '$'
+    let replacement = spec.prefix . '\1' . spec.suffix
+    let spec_name = substitute(short_file_name, pattern, replacement, '')
+    let path = "**/" . spec.dir . fnamemodify(spec_name, ':t:')
+    let spec_file = glob(path, 0, 1)
+    if index(spec_file, file_name) == -1
+      if s:find_file(path)
         let jumped = s:go_to_func_in_file(word)
       endif
-    endtry
+    else
+      let jumped = s:go_to_func_in_file(word)
+    endif
   endif
 
   if !jumped
     call s:log('Could not find spec function')
-    " And jump back
-    call setpos(file_name, pos)
+    " And jump back when we are still in the current file
+    if file_name == expand('%:p')
+      call setpos('.', pos)
+    endif
   endif
 
   return jumped
