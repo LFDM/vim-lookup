@@ -3,12 +3,12 @@ let s:silent = 0
 function! lookup#setup()
   if !s:has_configuration_defined() | return | endif
 
-  let vars = [ 'substitute', 'callsign', 'func_def' ]
-  for var in vars | call s:set_var(var) | endfor
+  let vars = { 'substitute': [], 'callsign': '.', 'func_def': [] }
+  for var in items(vars) | call s:set_var(var[0], var[1]) | endfor
 
   let vars_to_parse = [ 'main_file', 'spec_file' ]
   for to_parse in vars_to_parse
-    let parsed = s:parse_file_def(s:get_value(to_parse))
+    let parsed = s:parse_file_def(s:get_value(to_parse, {}))
     call s:set_var_to_value(to_parse, parsed)
   endfor
 endfunction
@@ -313,24 +313,24 @@ function! s:move_top_left()
   exec s:window_command . "t"
 endfunction
 
-function! s:get_value(key)
+function! s:get_value(key, default)
   if exists('g:lookup_go_to_mappings')
-    return s:lookup_key(g:lookup_go_to_mappings, a:key)
+    return s:lookup_key(g:lookup_go_to_mappings, a:key, a:default)
   endif
 endfunction
 
-function! s:lookup_key(dict, key)
+function! s:lookup_key(dict, key, default)
   if has_key(a:dict, &ft)
     let container = get(a:dict, &ft)
     if has_key(container, a:key)
       return get(container, a:key)
-    else
     endif
   endif
+  return a:default
 endfunction
 
-function! s:set_var(key)
-  call s:set_buf_var(a:key, s:get_value(a:key))
+function! s:set_var(key, default)
+  call s:set_buf_var(a:key, s:get_value(a:key, a:default))
 endfunction
 
 function! s:set_var_to_value(key, val)
