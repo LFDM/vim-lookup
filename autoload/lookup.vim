@@ -1,11 +1,19 @@
 let s:silent = 0
 let b:is_setup = 0
 
+let s:default_func_defs = {
+  \'javascript': [
+  \  { 'lhs': 'function ', 'rhs': '\s\?(' },
+  \  { 'lhs': 'this\.', 'rhs': ' = ' },
+  \  { 'lhs': '\.', 'rhs': ' = function' },
+  \]
+\}
+
 function! lookup#setup()
   let b:is_setup = s:has_configuration_defined()
   if !b:is_setup | return | endif
 
-  let vars = { 'substitute': [], 'callsign': '.', 'func_def': [] }
+  let vars = { 'substitute': [], 'callsign': '.', 'func_def': s:get_default_func_def() }
   for var in items(vars) | call s:set_var(var[0], var[1]) | endfor
 
   let vars_to_parse = [ 'main_file', 'spec_file' ]
@@ -415,4 +423,6 @@ function! s:ask_for_file(msg, choices)
     endif
 endfunction
 
-
+function! s:get_default_func_def()
+  return get(s:default_func_defs, &ft, [])
+endfunction
