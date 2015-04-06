@@ -114,11 +114,12 @@ function! s:go_to_spec_func()
       let pattern = '^' . main.prefix . '\(.*\)' . main.suffix . '$'
       let replacement = spec.prefix . '\1' . spec.suffix
       let spec_name = substitute(short_file_name, pattern, replacement, '')
-      if spec_name != short_file_name
-        try
-          exec "find **/" . spec_name
+      let path = "**/" . spec.dir . fnamemodify(spec_name, ':t:')
+      let spec_file = glob(path, 0, 1)
+      if index(spec_file, file_name) == -1
+        if s:find_file(path)
           let jumped = s:go_to_func_in_file(word)
-        endtry
+        endif
       else
         let jumped = s:go_to_func_in_file(word)
       endif
@@ -167,16 +168,13 @@ function! s:go_to_file(word, file_def)
 
   for subst in b:lookup_substitute
     let file_name = substitute(a:word, subst[0], subst[1], 'g')
-    if a:word !=# file_name
-      let full_name = a:file_def.prefix . file_name . a:file_def.suffix
-      try
-        let path = "**/" . a:file_def.dir . full_name
-        exec "find " . path
-        return 1
-      catch
-        call s:log("Lookup could not find a file named " . full_name)
-        return 0
-      endtry
+    let full_name = a:file_def.prefix . file_name . a:file_def.suffix
+    let path = "**/" . a:file_def.dir . full_name
+    if s:find_file(path)
+      return 1
+    else
+      call s:log("Lookup could not find a file named " . full_name)
+      return 0
     endif
   endfor
 endfunction
@@ -372,6 +370,20 @@ endfunction
 
 function! s:no_conf_present()
   call s:log("No configuration for " . &ft . " present")
+endfunction
+
+function! s:find_file(path)
+    let files = glob(a:path, 0, 1)
+    let no_of_files = len(files)
+    if no_of_files == 0
+        return 0
+    endif
+    if no_of_files == 1
+        exec "e " . files[0]
+    else
+      "exec "find " . a:path
+    endif
+    return 1
 endfunction
 
 
