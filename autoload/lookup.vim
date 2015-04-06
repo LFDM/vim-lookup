@@ -358,21 +358,9 @@ function! s:parse_file_def(file_def)
     let dir = ''
   endif
 
-  if has_key(a:file_def, 'prefix')
-    let prefix = get(a:file_def, 'prefix')
-  else
-    let prefix = ''
-  endif
-
-  if has_key(a:file_def, 'suffix')
-    let suffix = get(a:file_def, 'suffix')
-  else
-    let suffix= ''
-  endif
-
   let res.dir = dir
-  let res.prefix = prefix
-  let res.suffix = suffix
+  let res.prefix = get(a:file_def, 'prefix', '')
+  let res.suffix = get(a:file_def, 'suffix', '')
   return res
 endfunction
 
