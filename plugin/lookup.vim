@@ -11,6 +11,30 @@ let g:lookup_substitutions = {
   \ 'to_lowercase': ['\(.*\)', '\l\1', '']
 \}
 
+let g:lookup_default_func_defs = {
+  \'javascript': [
+  \  { 'lhs': 'function ', 'rhs': '\s\?(' },
+  \  { 'lhs': 'this\.', 'rhs': ' = ' },
+  \  { 'lhs': '\.', 'rhs': ' = function' },
+  \],
+  \'ruby': [
+  \  { 'lhs': 'describe ..\?' },
+  \  { 'lhs': 'def ' }
+  \]
+\}
+
+
+let g:lookup_default_substitutes = {
+  \'javascript': [
+  \  g:lookup_substitutions.camel_case_to_hyphenated,
+  \  g:lookup_substitutions.to_lowercase
+  \],
+  \'ruby': [
+  \  g:lookup_substitutions.camel_case_to_underscored
+  \]
+\}
+
+
 augroup lookup
   au Filetype * call lookup#setup()
 augroup END

@@ -7,34 +7,6 @@ let b:is_setup = 0
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"                                Defaults                                 "
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-let s:default_func_defs = {
-  \'javascript': [
-  \  { 'lhs': 'function ', 'rhs': '\s\?(' },
-  \  { 'lhs': 'this\.', 'rhs': ' = ' },
-  \  { 'lhs': '\.', 'rhs': ' = function' },
-  \],
-  \'ruby': [
-  \  { 'lhs': 'describe ..\?' },
-  \  { 'lhs': 'def ' }
-  \]
-\}
-
-
-let s:default_substitutes = {
-  \'javascript': [
-  \  g:lookup_substitutions.camel_case_to_hyphenated,
-  \  g:lookup_substitutions.to_lowercase
-  \],
-  \'ruby': [
-  \  g:lookup_substitutions.camel_case_to_underscored
-  \]
-\}
-
-
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "                                  Setup                                  "
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -43,9 +15,9 @@ function! lookup#setup()
   if !b:is_setup | return | endif
 
   let vars = {
-    \'substitute': s:get_default(s:default_substitutes, []),
+    \'substitute': s:get_default(g:lookup_default_substitutes, []),
     \'callsign': '.',
-    \'func_def': s:get_default(s:default_func_defs, [])
+    \'func_def': s:get_default(g:lookup_default_func_defs, [])
   \}
 
   for var in items(vars) | call s:set_var(var[0], var[1]) | endfor
