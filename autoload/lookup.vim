@@ -1,9 +1,15 @@
 let s:silent = 0
 
 function! lookup#setup()
-  let vars = [ 'substitute', 'extension', 'spec_extension', 'callsign', 'func_def' ]
-  for var in vars
-    call s:set_var(var)
+  if !s:has_configuration_defined() | return | endif
+
+  let vars = [ 'substitute', 'callsign', 'func_def' ]
+  for var in vars | call s:set_var(var) | endfor
+
+  let vars_to_parse = [ 'main_file', 'spec_file' ]
+  for to_parse in vars_to_parse
+    let parsed = s:parse_file_def(s:get_value(to_parse))
+    call s:set_var_to_value(to_parse, parsed)
   endfor
 endfunction
 
@@ -51,16 +57,16 @@ endfunction
 
 function! lookup#go_to_file()
   if !s:has_configuration_defined() | return | endif
-  return s:go_to_file(s:get_current_word(), b:lookup_extension)
+  return s:go_to_file(s:get_current_word(), b:lookup_main_file)
 endfunction
 
 function! lookup#go_to_spec_file()
   if !s:has_configuration_defined() | return | endif
-  return s:go_to_file(s:get_current_word(), b:lookup_spec_extension)
+  return s:go_to_file(s:get_current_word(), b:lookup_spec_file)
 endfunction
 
 function! lookup#go_to_func()
-  return s:go_to_func(b:lookup_extension)
+  return s:go_to_func(b:lookup_main_file)
 endfunction
 
 function! lookup#go_to_spec_func()
@@ -96,12 +102,16 @@ function! s:go_to_spec_func()
   let word = s:get_current_word()
   let pos = getpos('')
   let file_name = expand('%:p')
-  let jumped = s:go_to_func(b:lookup_spec_extension)
+  let jumped = s:go_to_func(b:lookup_spec_file)
   if jumped && file_name == expand('%:p')
     let jumped = 0
     try
       let short_file_name = expand('%')
-      let spec_name = substitute(short_file_name, b:lookup_extension . '$', b:lookup_spec_extension, '')
+      let main = b:lookup_main_file
+      let spec = b:lookup_spec_file
+      let pattern = '^' . main.prefix . '\(.*\)' . main.suffix . '$'
+      let replacement = spec.prefix . '\1' . spec.suffix
+      let spec_name = substitute(short_file_name, pattern, replacement, '')
       if spec_name != short_file_name
         try
           exec "find **/" . spec_name
@@ -122,7 +132,7 @@ function! s:go_to_spec_func()
   return jumped
 endfunction
 
-function! s:go_to_func(extension)
+function! s:go_to_func(file_def)
   if !s:has_configuration_defined() | return | endif
 
   let word = s:get_current_word()
@@ -142,7 +152,7 @@ function! s:go_to_func(extension)
       let file_name = s:get_current_word()
       call setpos('.', pos)
       try
-        call s:go_to_file(file_name, a:extension)
+        call s:go_to_file(file_name, a:file_def)
         return s:go_to_func_in_file(word)
       endtry
     endif
@@ -151,13 +161,15 @@ function! s:go_to_func(extension)
   return  s:go_to_func_in_file(word)
 endfunction
 
-function! s:go_to_file(word, extension)
+function! s:go_to_file(word, file_def)
+
   for subst in b:lookup_substitute
     let file_name = substitute(a:word, subst[0], subst[1], 'g')
     if a:word !=# file_name
-      let full_name = file_name . a:extension
+      let full_name = a:file_def.prefix . file_name . a:file_def.suffix
       try
-        exec "find **/" . full_name
+        let path = "**/" . a:file_def.dir . full_name
+        exec "find " . path
         return 1
       catch
         call s:log("Lookup could not find a file named " . full_name)
@@ -312,18 +324,54 @@ function! s:lookup_key(dict, key)
     let container = get(a:dict, &ft)
     if has_key(container, a:key)
       return get(container, a:key)
+    else
     endif
   endif
 endfunction
 
 function! s:set_var(key)
-  call setbufvar(bufname('%'), 'lookup_' . a:key, s:get_value(a:key))
+  call s:set_buf_var(a:key, s:get_value(a:key))
+endfunction
+
+function! s:set_var_to_value(key, val)
+  call s:set_buf_var(a:key, a:val)
+endfunction
+
+function! s:set_buf_var(key, val)
+  call setbufvar(bufname('%'), 'lookup_' . a:key, a:val)
 endfunction
 
 function! s:has_configuration_defined()
   if (exists('g:lookup_go_to_mappings') && has_key(g:lookup_go_to_mappings, &ft))
     return 1
   endif
+endfunction
+
+function! s:parse_file_def(file_def)
+  let res = {}
+  if has_key(a:file_def, 'dir')
+    let dir = get(a:file_def, 'dir')
+    if dir !~ '/$' | let dir = dir . '/' | endif
+  else
+    let dir = ''
+  endif
+
+  if has_key(a:file_def, 'prefix')
+    let prefix = get(a:file_def, 'prefix')
+  else
+    let prefix = ''
+  endif
+
+  if has_key(a:file_def, 'suffix')
+    let suffix = get(a:file_def, 'suffix')
+  else
+    let suffix= ''
+  endif
+
+  let res.dir = dir
+  let res.prefix = prefix
+  let res.suffix = suffix
+  return res
 endfunction
 
 function! s:log(msg)
