@@ -219,7 +219,7 @@ endfunction
 function! s:go_to_file(word, file_def)
 
   for subst in b:lookup_substitute
-    let file_name = substitute(a:word, subst[0], subst[1], 'g')
+    let file_name = substitute(a:word, subst[0], subst[1], subst[2])
     let full_name = a:file_def.prefix . file_name . a:file_def.suffix
     let path = "**/" . a:file_def.dir . full_name
     if s:find_file(path)
