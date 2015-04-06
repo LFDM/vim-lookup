@@ -1,19 +1,53 @@
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"                           Internal variables                            "
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
 let s:silent = 0
 let b:is_setup = 0
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"                                Defaults                                 "
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 let s:default_func_defs = {
   \'javascript': [
   \  { 'lhs': 'function ', 'rhs': '\s\?(' },
   \  { 'lhs': 'this\.', 'rhs': ' = ' },
   \  { 'lhs': '\.', 'rhs': ' = function' },
+  \],
+  \'ruby': [
+  \  { 'lhs': '\s*describe ..\?' },
+  \  { 'lhs': '\s*def ' }
   \]
 \}
+
+
+let s:default_substitutes = {
+  \'javascript': [
+  \  g:lookup_substitutions.camel_case_to_hyphenated,
+  \  g:lookup_substitutions.to_lowercase
+  \],
+  \'ruby': [
+  \  g:lookup_substitutions.camel_case_to_underscored
+  \]
+\}
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"                                  Setup                                  "
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 function! lookup#setup()
   let b:is_setup = s:has_configuration_defined()
   if !b:is_setup | return | endif
 
-  let vars = { 'substitute': [], 'callsign': '.', 'func_def': s:get_default_func_def() }
+  let vars = {
+    \'substitute': s:get_default(s:default_substitutes, []),
+    \'callsign': '.',
+    \'func_def': s:get_default(s:default_func_defs, [])
+  \}
+
   for var in items(vars) | call s:set_var(var[0], var[1]) | endfor
 
   let vars_to_parse = [ 'main_file', 'spec_file' ]
@@ -22,6 +56,11 @@ function! lookup#setup()
     call s:set_var_to_value(to_parse, parsed)
   endfor
 endfunction
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"                            Public functions                             "
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 function! lookup#go_to_and_open_layout(key)
   let jumped = lookup#go_to_file()
@@ -82,6 +121,11 @@ endfunction
 function! lookup#go_to_spec_func()
   return s:go_to_spec_func()
 endfunction
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"                            Private Functions                            "
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 function! s:go_to_func_or_file(func_fn, file_fn)
   if !b:is_setup | return s:no_conf_present() | endif
@@ -423,6 +467,7 @@ function! s:ask_for_file(msg, choices)
     endif
 endfunction
 
-function! s:get_default_func_def()
-  return get(s:default_func_defs, &ft, [])
+function! s:get_default(container, default)
+  return get(a:container, &ft, a:default)
 endfunction
+
