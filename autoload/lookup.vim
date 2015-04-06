@@ -17,8 +17,8 @@ let s:default_func_defs = {
   \  { 'lhs': '\.', 'rhs': ' = function' },
   \],
   \'ruby': [
-  \  { 'lhs': '\s*describe ..\?' },
-  \  { 'lhs': '\s*def ' }
+  \  { 'lhs': 'describe ..\?' },
+  \  { 'lhs': 'def ' }
   \]
 \}
 
