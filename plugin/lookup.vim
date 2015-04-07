@@ -59,7 +59,7 @@ command! -nargs=1 LookupGoToAndOpenLayout call lookup#go_to_and_open_layout(<f-a
 let s:mappings = {
   \'g': 'GoTo<cr>',
   \'s': 'GoToSpec<cr>',
-  \'o': 'OpenLayout ',
+  \'l': 'OpenLayout ',
   \'f': 'OpenFile '
 \}
 
