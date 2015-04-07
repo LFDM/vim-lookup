@@ -189,7 +189,7 @@ function! s:go_to_func(file_def)
 endfunction
 
 function! s:go_to_file(word, file_def)
-
+  let missed_files = []
   for subst in b:lookup_substitute
     let file_name = substitute(a:word, subst[0], subst[1], subst[2])
     let full_name = a:file_def.prefix . file_name . a:file_def.suffix
@@ -197,10 +197,11 @@ function! s:go_to_file(word, file_def)
     if s:find_file(path)
       return 1
     else
-      call s:log("Lookup could not find a file named " . full_name)
-      return 0
+      call add(missed_files, full_name)
     endif
   endfor
+  call s:log("Could not find a file named " . s:join(missed_files, 'or'))
+  return 0
 endfunction
 
 function! s:go_to_func_in_file(word)
@@ -441,5 +442,22 @@ endfunction
 
 function! s:get_default(container, default)
   return get(a:container, &ft, a:default)
+endfunction
+
+function! s:join(arr, join_word)
+  let no = len(a:arr)
+  if no == 0 | return | endif
+  if no == 1 | return a:arr[0] | endif
+
+  let last = a:arr[no - 1]
+  let rest = a:arr[0:-2]
+  let res = ''
+  let i = 0
+  for el in rest
+    if i != 0 | let res .= ", " | endif
+    let res .= el
+  endfor
+  let res .= " " . a:join_word . " " . last
+  return res
 endfunction
 
