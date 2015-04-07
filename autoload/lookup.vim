@@ -408,20 +408,20 @@ function! s:no_conf_present()
 endfunction
 
 function! s:find_file(path)
-    let files = glob(a:path, 0, 1)
-    let no_of_files = len(files)
-    if no_of_files == 0
-      return 0
-    endif
-    if no_of_files == 1
-      exec "e " . files[0]
-    else
-      let msg = "Multiple files available to jump to - please choose one"
-      let choices = s:build_choice_string(files)
-      let choice = s:ask_for_file(msg, choices)
-      exec "e " . files[choice - 1]
-    endif
-    return 1
+  let files = glob(a:path, 0, 1)
+  let no_of_files = len(files)
+  if no_of_files == 0
+    return 0
+  endif
+  if no_of_files == 1
+    exec "e " . files[0]
+  else
+    let msg = "Multiple files available to jump to - please choose one"
+    let choices = s:build_choice_string(files)
+    let choice = s:ask_for_file(msg, choices)
+    exec "e " . files[choice - 1]
+  endif
+  return 1
 endfunction
 
 let s:choices = 'asdfjkl;ghqweruioptyzxcvbnm1234567890'
