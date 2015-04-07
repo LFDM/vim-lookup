@@ -19,7 +19,7 @@ let g:lookup_default_func_defs = {
   \  { 'lhs': 'describe .', 'rhs': '' },
   \],
   \'coffee': [
-  \  { 'rhs': '= \((.*)\)\? \?[-=]>' },
+  \  { 'rhs': ' = \((.*)\)\? \?[-=]>' },
   \  { 'lhs': 'describe .', 'rhs': '' },
   \],
   \'ruby': [
