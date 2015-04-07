@@ -228,6 +228,13 @@ function! s:go_to_func_in_file(word)
 endfunction
 
 function! s:open_files(windows, source)
+    " Don't rely on user settings
+    let old_sb = &splitbelow
+    let old_sr = &splitright
+
+    let &splitbelow = 1
+    let &splitright = 1
+
     " Calculate files we have access to
     let windows = s:setup_windows(a:windows, a:source)
 
@@ -266,6 +273,9 @@ function! s:open_files(windows, source)
     endfor
 
     call s:move_top_left()
+
+    let &splitbelow = old_sb
+    let &splitright = old_sr
 endfunction
 
 function! s:open_file(source, opts)
