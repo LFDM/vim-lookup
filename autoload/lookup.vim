@@ -126,7 +126,7 @@ function! s:go_to_spec_func()
   " Some extra work needs to be done when we are already in the file,
   " which holds the function definition to which spec we want to jump.
   let word = s:get_current_word()
-  let pos = getpos('')
+  let pos = getpos('.')
   let file_name = expand('%:p')
   let jumped = s:go_to_func(b:lookup_spec_file)
   if jumped && file_name == expand('%:p')
