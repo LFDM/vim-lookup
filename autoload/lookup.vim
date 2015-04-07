@@ -115,7 +115,7 @@ function! s:go_to_func_or_file(func_fn, file_fn)
       if current == expand('%:p')
         call s:log('Could neither find file nor function')
       else
-        call s:log('Cound not find function')
+        call s:log('Could not find function')
       endif
     endif
   endif
@@ -138,7 +138,7 @@ function! s:go_to_spec_func()
     let replacement = spec.prefix . '\1' . spec.suffix
     let spec_name = substitute(short_file_name, pattern, replacement, '')
     let path = "**/" . spec.dir . fnamemodify(spec_name, ':t:')
-    let spec_file = glob(path, 0, 1)
+    let spec_file = s:glob(path)
     if index(spec_file, file_name) == -1
       if s:find_file(path)
         let jumped = s:go_to_func_in_file(word)
@@ -408,7 +408,7 @@ function! s:no_conf_present()
 endfunction
 
 function! s:find_file(path)
-  let files = glob(a:path, 0, 1)
+  let files = s:glob(a:path)
   let no_of_files = len(files)
   if no_of_files == 0
     return 0
@@ -469,5 +469,14 @@ function! s:join(arr, join_word)
   endfor
   let res .= " " . a:join_word . " " . last
   return res
+endfunction
+
+function! s:glob(path)
+  if exists('g:lookup_glob_command')
+    let output = system(substitute(g:lookup_glob_command, '%s', a:path, ''))
+    return split(output, "\n")
+  else
+    return glob(a:path, 0, 1)
+  endif
 endfunction
 
