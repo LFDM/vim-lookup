@@ -474,7 +474,11 @@ endfunction
 function! s:glob(path)
   if exists('g:lookup_glob_command')
     let output = system(substitute(g:lookup_glob_command, '%s', a:path, ''))
-    return split(output, "\n")
+    if v:shell_error == 0
+      return split(output, "\n")
+    else
+      return []
+    endif
   else
     return glob(a:path, 0, 1)
   endif
